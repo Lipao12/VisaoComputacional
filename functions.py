@@ -100,18 +100,6 @@ def draw_arrows(point, base, axis, length=1.5):
 
     return axis
 
-def world_view(obj, cam):
-    ax0 = set_plot(lim=[-20, 40])
-    draw_arrows(cam[:, -1], cam[:, 0:-1], ax0)
-    ax0.plot3D(obj[0, :], obj[1, :], obj[2, :], 'red')
-    # Plotando a quina da casa que está em (0,0,0) para servir de referência
-    ax0.scatter(obj[0, 0], obj[1, 0], obj[2, 0], 'b')
-    # Plote a câmera também - adicione o código abaixo
-
-    draw_arrows(cam[:, -1], cam[:, 0:3], ax0)
-
-    plt.show()
-
 def world_view_frontend(fig, cam, obj,ax=None):
     if ax==None:
         ax = fig.add_subplot(1,2,1, projection='3d')
@@ -189,26 +177,6 @@ def set_cam_position(dx, dy, dz, cam, M):
     cam[:, -1] = dx, dy, dz, 1
     M[:, -1] = dx, dy, dz, 1
     return cam, M
-
-def cam_view(proj, width=1280, height=720):
-    # Plota a imagem
-    #fig = plt.figure()
-    ax1 = plt.axes()
-    ax1.set_title("Imagem")
-    # Acerte os limites do eixo X
-    ax1.set_xlim([0, width])
-    # Acerte os limites do eixo Y
-    # Para inverter, basta colocar o valor máximo primeiro e o valor mínimo depois
-    ax1.set_ylim([height, 0])  # (max, min) -- isso faz com que o y fique da forma usual na imagem
-
-    plt.plot(proj[0, :], proj[1, :])
-
-    ax1.plot(3, 4)
-    ax1.grid('True')
-    ax1.set_aspect('equal')
-
-    plt.show()
-
 
 def camera_view_frontend(fig, proj, ax=None, width=1280, height=720):
     if ax is None:
