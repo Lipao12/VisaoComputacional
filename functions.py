@@ -1,17 +1,43 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from math import pi, cos, sin
+from stl import mesh
 
 ### Setting printing options
 np.set_printoptions(formatter={'float': lambda x: "{0:0.3f}".format(x)})
 np.set_printoptions(precision=3, suppress=True)
+
+def init_cam(initial_point=[40,0,0]):
+    e1 = np.array([[1], [0], [0], [0]])  # X
+    e2 = np.array([[0], [1], [0], [0]])  # Y
+    e3 = np.array([[0], [0], [1], [0]])  # Z
+    base = np.hstack((e1, e2, e3))
+    point = np.array([[0],[0],[0],[1]])
+
+    cam = np.hstack((base, point))
+    M = translate(initial_point[0], initial_point[1], initial_point[2]) @ z_rotation(90) @ x_rotation(-90)
+    return M@cam, M
+
+def init_obj2():
+    your_mesh = mesh.Mesh.from_file('donkey_kong.STL')
+    x = your_mesh.x.flatten()
+    y = your_mesh.y.flatten()
+    z = your_mesh.z.flatten()
+
+    kong = np.array([x.T, y.T, z.T]) * 0.2
+    kong = np.vstack([kong, np.ones(np.size(kong, 1))])
+
+    return kong
 
 def d2rad(angle):
     return (angle * pi)/180
 
 def rad2d(angle):
     return (angle * 180)/pi
+
+###################################################################
+############################  World  #############################
+###################################################################
 
 def translate(dx, dy, dz):
     T = np.eye(4)
@@ -22,6 +48,7 @@ def translate(dx, dy, dz):
 
 def z_rotation(angle):
     angle = d2rad(angle)
+    print(angle)
     rotation_matrix = np.array(
         [[cos(angle), -sin(angle), 0, 0], [sin(angle), cos(angle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     return rotation_matrix

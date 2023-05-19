@@ -1,7 +1,5 @@
 import tkinter as tk
 from functions import *
-from projecao import *
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -48,63 +46,39 @@ def exibir_grafico(dx, dy, dz):
 def rotate_grafico(angle_x, angle_y, angle_z):
     global cam, M_cam0
     if not(camera):
-        cam = x_rotation(angle_x) @ cam
-        M_cam0 = x_rotation(angle_x) @ M_cam0
-        cam = x_rotation(angle_y) @ cam
-        M_cam0 = x_rotation(angle_y) @ M_cam0
-        cam = x_rotation(angle_z) @ cam
-        M_cam0 = x_rotation(angle_z) @ M_cam0
+        M = x_rotation(angle_x)@y_rotation(angle_y)@z_rotation(angle_z)
     else:
-        cam = x_rotation(angle_x) @ cam
-        M_cam0 = x_rotation(angle_x) @ M_cam0
-        cam = y_rotation(angle_y) @ cam
-        M_cam0 = y_rotation(angle_y) @ M_cam0
-        cam = z_rotation(angle_z) @ cam
-        M_cam0 = z_rotation(angle_z) @ M_cam0
+        M = x_rotation_cam_ref(angle_x, M_cam0)@y_rotation_cam_ref(angle_y, M_cam0)@z_rotation_cam_ref(angle_z, M_cam0)
+
+    cam = M@cam
+    M_cam0 = M@M_cam0
     exibir_grafico(0,0,0)
 
-def moveX_forward():
-    exibir_grafico(step, 0, 0)
-def moveX_backward():
-    exibir_grafico(-step, 0, 0)
-def moveY_forward():
-    exibir_grafico(0, step, 0)
-def moveY_backward():
-    exibir_grafico(0, -step, 0)
-def moveZ_forward():
-    exibir_grafico(0, 0, step)
-def moveZ_backward():
-    exibir_grafico(0, 0, -step)
+def move(step, axis):
+    if axis == "X":
+        exibir_grafico(step, 0, 0)
+    elif axis == "Y":
+        exibir_grafico(0, step, 0)
+    elif axis == "Z":
+        exibir_grafico(0, 0, step)
 
-def rotX_forward():
-    rotate_grafico(angle, 0, 0)
-def rotX_backward():
-    rotate_grafico(-angle, 0, 0)
-def rotY_forward():
-    rotate_grafico(0, angle, 0)
-def rotY_backward():
-    rotate_grafico(0, -angle, 0)
-def rotZ_forward():
-    rotate_grafico(0, 0, angle)
-def rotZ_backward():
-    rotate_grafico(0, 0, -angle)
+def rotate(angle, axis):
+    if axis == "X":
+        rotate_grafico(angle, 0, 0)
+    elif axis == "Y":
+        rotate_grafico(0, angle, 0)
+    elif axis == "Z":
+        rotate_grafico(0, 0, angle)
 
 def camera_reference():
     global camera
-    if not(camera):
-        camera = not(camera)
-        btn_cam_ref.configure(bg="#b9b9b9")
-        btn_world_ref.configure(bg=initial_bg)
-    else:
-        camera = not (camera)
-        btn_cam_ref.configure(bg=initial_bg)
-        btn_world_ref.configure(bg="#b9b9b9")
+    camera = not(camera)
+    btn_cam_ref.configure(bg="#b9b9b9" if camera else initial_bg)
+    btn_world_ref.configure(bg=initial_bg if camera else "#b9b9b9")
 
 def change_values():
-    global step, f, sx, sy, MP, angle
+    global  f, sx, sy, MP
     try:
-        step = float(step_input.get())
-        angle = float(angle_input.get())
         f = float(f_input.get())
         sx = float(sx_input.get())
         sy = float(sy_input.get())
@@ -135,6 +109,8 @@ def reset_values():
     sy_input.insert(0, f'{30}')
 
 window = tk.Tk()
+window.title("Projeto 1 - Visão Computacional")
+window.geometry("1500x709")
 
 # Crie a figura inicial do matplotlib
 # Crie a figura do matplotlib
@@ -144,7 +120,7 @@ angle = 15
 step = 5
 sx = None
 sy = None
-obj = z_rotation(90)@init_obj2()
+obj = translate(0,0,-9)@z_rotation(90)@init_obj2()
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
@@ -222,33 +198,33 @@ lbl_value_X = tk.StringVar()
 lbl_value_X.set(f'{cam[0,-1]: .1f}')
 lbl_value = tk.Label(master=button_frame, text="X orientation")
 lbl_value.grid(row=1, column=1)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveX_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: move(-float(step_input.get()), "X"), width=5)
 btn_decreaseX.grid(row=2, column=0, padx=2)
 lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_X)
 lbl_value.grid(row=2, column=1, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=moveX_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: move(float(step_input.get()), "X"), width=5)
 btn_increaseX.grid(row=2, column=2, padx=2)
 
 lbl_value_Y = tk.StringVar()
 lbl_value_Y.set(f'{cam[1,-1]: .1f}')
 lbl_value = tk.Label(master=button_frame, text="Y orientation")
 lbl_value.grid(row=3, column=1)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveY_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: move(-float(step_input.get()), "Y"), width=5)
 btn_decreaseX.grid(row=4, column=0, padx=2)
 lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_Y)
 lbl_value.grid(row=4, column=1, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=moveY_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: move(float(step_input.get()), "Y"), width=5)
 btn_increaseX.grid(row=4, column=2, padx=2)
 
 lbl_value_Z = tk.StringVar()
 lbl_value_Z.set(f'{cam[2,-1]: .1f}')
 lbl_value = tk.Label(master=button_frame, text="Z orientation")
 lbl_value.grid(row=5, column=1)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveZ_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: move(-float(step_input.get()), "Z"), width=5)
 btn_decreaseX.grid(row=6, column=0, padx=2)
 lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_Z)
 lbl_value.grid(row=6, column=1, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=moveZ_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: move(float(step_input.get()), "Z"), width=5)
 btn_increaseX.grid(row=6, column=2, padx=2)
 
 ## --- Rotation
@@ -257,23 +233,23 @@ lbl_value.grid(row=0, column=12)
 
 lbl_value = tk.Label(master=button_frame, text="X orientation")
 lbl_value.grid(row=1, column=12)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotX_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: rotate(-float(angle_input.get()), "X"), width=5)
 btn_decreaseX.grid(row=2, column=11, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=rotX_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: rotate(float(angle_input.get()), "X"), width=5)
 btn_increaseX.grid(row=2, column=13, padx=2)
 
 lbl_value = tk.Label(master=button_frame, text="Y orientation")
 lbl_value.grid(row=3, column=12)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotY_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: rotate(-float(angle_input.get()), "Y"), width=5)
 btn_decreaseX.grid(row=4, column=11, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=rotY_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: rotate(float(angle_input.get()), "Y"), width=5)
 btn_increaseX.grid(row=4, column=13, padx=2)
 
 lbl_value = tk.Label(master=button_frame, text="Z orientation")
 lbl_value.grid(row=5, column=12)
-btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotZ_backward, width=5)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=lambda: rotate(-float(angle_input.get()), "Z"), width=5)
 btn_decreaseX.grid(row=6, column=11, padx=2)
-btn_increaseX = tk.Button(master=button_frame, text="+", command=rotZ_forward, width=5)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=lambda: rotate(float(angle_input.get()), "Z"), width=5)
 btn_increaseX.grid(row=6, column=13, padx=2)
 
 # Inicie o loop principal do Tkinter
