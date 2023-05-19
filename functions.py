@@ -88,10 +88,9 @@ def world_view(obj, cam):
 
 def world_view_frontend(fig=None, cam=None, obj=None):
     ax = fig.add_subplot(121, projection='3d')
-    lim = [-20, 20]
-    ax.set_xlim(lim)
-    ax.set_ylim(lim)
-    ax.set_zlim(lim)
+    ax.set_xlim([0, 50])
+    ax.set_ylim([-20, 20])
+    ax.set_zlim([-20, 20])
 
     draw_arrows(cam[:, -1], cam[:, 0:-1], ax)
     ax.plot3D(obj[0, :], obj[1, :], obj[2, :], 'red')

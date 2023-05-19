@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-#%matplotlib inline
-import numpy as np
 from functions import *
 
-def init_cam(initial_point=[35,-5,8]):
+from stl import mesh
+import numpy as np
+
+def init_cam(initial_point=[40,0,9]):
     e1 = np.array([[1], [0], [0], [0]])  # X
     e2 = np.array([[0], [1], [0], [0]])  # Y
     e3 = np.array([[0], [0], [1], [0]])  # Z
@@ -56,9 +55,16 @@ def init_obj():
     house = np.vstack([house, np.ones(np.size(house, 1))])
     return house
 
-cam, M_cam0 = init_cam()
-house = init_obj()
+def init_obj2():
+    your_mesh = mesh.Mesh.from_file('donkey_kong.STL')
+    x = your_mesh.x.flatten()
+    y = your_mesh.y.flatten()
+    z = your_mesh.z.flatten()
 
+    kong = np.array([x.T, y.T, z.T]) * 0.2
+    kong = np.vstack([kong, np.ones(np.size(kong, 1))])
+
+    return kong
 
 '''for i in range(6):
     M_cam0 = x_rotation(180/4) @ M_cam0

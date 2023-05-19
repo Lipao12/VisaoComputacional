@@ -55,12 +55,12 @@ def rotate_grafico(angle_x, angle_y, angle_z):
         cam = x_rotation(angle_z) @ cam
         M_cam0 = x_rotation(angle_z) @ M_cam0
     else:
-        cam = x_rotation_cam_ref(angle_x, M_cam0) @ cam
-        M_cam0 = x_rotation_cam_ref(angle_x, M_cam0) @ M_cam0
-        cam = y_rotation_cam_ref(angle_y, M_cam0) @ cam
-        M_cam0 = y_rotation_cam_ref(angle_y, M_cam0) @ M_cam0
-        cam = z_rotation_cam_ref(angle_z, M_cam0) @ cam
-        M_cam0 = z_rotation_cam_ref(angle_z, M_cam0) @ M_cam0
+        cam = x_rotation(angle_x) @ cam
+        M_cam0 = x_rotation(angle_x) @ M_cam0
+        cam = y_rotation(angle_y) @ cam
+        M_cam0 = y_rotation(angle_y) @ M_cam0
+        cam = z_rotation(angle_z) @ cam
+        M_cam0 = z_rotation(angle_z) @ M_cam0
     exibir_grafico(0,0,0)
 
 def moveX_forward():
@@ -144,7 +144,7 @@ angle = 15
 step = 5
 sx = None
 sy = None
-obj = init_obj()
+obj = z_rotation(90)@init_obj2()
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
