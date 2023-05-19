@@ -87,7 +87,7 @@ def world_view(obj, cam):
     plt.show()
 
 def world_view_frontend(fig=None, cam=None, obj=None):
-    ax = fig.add_subplot(projection='3d')
+    ax = fig.add_subplot(121, projection='3d')
     lim = [-20, 20]
     ax.set_xlim(lim)
     ax.set_ylim(lim)
@@ -165,7 +165,7 @@ def set_cam_position(dx, dy, dz, cam, M):
 
 def cam_view(proj, width=1280, height=720):
     # Plota a imagem
-    fig = plt.figure()
+    #fig = plt.figure()
     ax1 = plt.axes()
     ax1.set_title("Imagem")
     # Acerte os limites do eixo X
@@ -184,7 +184,8 @@ def cam_view(proj, width=1280, height=720):
 
 
 def camera_view_frontend(fig, proj, width=1280, height=720):
-    ax = plt.axes()
+    ax = fig.add_subplot(122)
+    #ax = plt.axes()
     ax.set_title("Imagem")
     ax.set_xlim([0, width])
     ax.set_ylim([height, 0])

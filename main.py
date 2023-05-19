@@ -1,247 +1,280 @@
-import pygame
-from sys import exit
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+import tkinter as tk
 from functions import *
 from projecao import *
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
-def draw_graphics(fig, h, mundo, w):
-    renderer = fig.canvas.get_renderer()
-    raw_data = renderer.tostring_rgb()
-    surface = pygame.image.fromstring(raw_data, fig.canvas.get_width_height(), 'RGB')
-    # Desenha a superfície com o gráfico
-   # if mundo:
-    #    view_world.blit(surface, surface.get_rect(bottomleft=(10, h)))
-   # else:
-    #    view_cam.blit(surface, surface.get_rect(bottomleft=(10, h)))
-    screen.blit(surface, (w, h))
-    fig.canvas.draw()
-    #plt.show(block=False)
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-def display_cam_info(cam):
-    # --- X, Y, Z Position
-    position_surface = test_font.render(f'{cam[0,-1]: .1f}', False, "White")
-    position_rect = position_surface.get_rect(midleft=(30, 40))
-    cam_info_surface.blit(position_surface, position_rect)
-    position_surface = test_font.render(f'{cam[1,-1]: .1f}', False, "White")
-    position_rect = position_surface.get_rect(midleft=(30, 70))
-    cam_info_surface.blit(position_surface, position_rect)
-    position_surface = test_font.render(f'{cam[2,-1]: .1f}', False, "White")
-    position_rect = position_surface.get_rect(midleft=(30, 100))
-    cam_info_surface.blit(position_surface, position_rect)
+# Variável global para o canvas
+canvas = None
 
-    view_world.blit(cam_info_surface, (10, 10))
+# Função para exibir o gráfico ao clicar no botão
+def exibir_grafico(dx, dy, dz):
+    global canvas, cam, M_cam0, lbl_value_Y, lbl_value_Z, ax, ax2 # Utilize as variáveis globais para atualizar as coordenadas existentes
 
-
-def display_warning():
-    text_warning2 = test_font.render("X axis", False, 'Black')
-    if Y:
-        text_warning2 = test_font.render("Y axis", False, 'Black')
-    elif Z:
-        text_warning2 = test_font.render("Z axis", False, 'Black')
-    text_warning_surface.blit(text_warning2, (text_warning.get_width()//2 -text_warning2.get_width()//2,
-                                text_warning.get_height()+10))
-    view_world.blit(text_warning_surface, (20, 150))
-    #screen.blit(text_warning_surface, (20, height - h - 20))
-
-def update_cam_translation(cam, M_cam0, ax_cam, ax_world):
-    if referential_switch.is_on:
-        if event.key == pygame.K_UP:
-            cam = translate_cam_ref(dx, dy, dz, M_cam0) @ cam
-            M_cam0 = translate_cam_ref(dx, dy, dz, M_cam0) @ M_cam0
-        elif event.key == pygame.K_DOWN:
-            cam = translate_cam_ref(-dx, -dy, -dz, M_cam0) @ cam
-            M_cam0 = translate_cam_ref(-dx, -dy, -dz, M_cam0) @ M_cam0
-    else:
-        if event.key == pygame.K_UP:
+    try:
+        if not(camera):
             cam = translate(dx, dy, dz) @ cam
             M_cam0 = translate(dx, dy, dz) @ M_cam0
-        elif event.key == pygame.K_DOWN:
-            cam = translate(-dx, -dy, -dz) @ cam
-            M_cam0 = translate(-dx, -dy, -dz) @ M_cam0
+        else:
+            cam = translate_cam_ref(dx, dy, dz, M_cam0) @ cam
+            M_cam0 = translate_cam_ref(dx, dy, dz, M_cam0) @ M_cam0
 
-    MP = cam_projection(M_cam0, f)
-    proj = image_2d(MP, obj)
-    ax_world = world_view_frontend(fig_world, cam=cam, obj=obj)
-    ax_cam = camera_view_frontend(fig_cam, proj)
-    return cam, M_cam0, ax_cam, ax_world
+        MP = cam_projection(M_cam0, f=f, sx=sx, sy=sy)
+        proj = image_2d(MP, obj)
 
-def update_cam_rotation(cam, M_cam0, ax_cam, ax_world):
-    if referential_switch.is_on:  # -- Camera
-        if event.key == pygame.K_UP:
-            cam = Rc @ cam
-            M_cam0 = Rc @ M_cam0
-        elif event.key == pygame.K_DOWN:
-            cam = Rc_neg @ cam
-            M_cam0 = Rc_neg @ M_cam0
-    else:  # -- Mundo
-        if event.key == pygame.K_UP:
-            cam = Rw @ cam
-            M_cam0 = Rw @ M_cam0
-        elif event.key == pygame.K_DOWN:
-            cam = Rw_neg @ cam
-            M_cam0 = Rw_neg @ M_cam0
+        # Crie a figura do matplotlib
+        #fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
+        ax = world_view_frontend(fig, cam=cam, obj=obj)
+        ax2 = camera_view_frontend(fig, proj)
 
-    MP = cam_projection(M_cam0, f)
-    proj = image_2d(MP, obj)
-    ax_world = world_view_frontend(fig_world, cam=cam, obj=obj)
-    ax_cam = camera_view_frontend(fig_cam, proj)
-    return cam, M_cam0, ax_cam, ax_world
+        # Limpe o canvas antes de desenhar o gráfico atualizado
+        if canvas:
+            canvas.get_tk_widget().pack_forget()
 
-pygame.init()
-width, height = 1280, 720
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Trabalho 1 - Visao Computacional")
-clock = pygame.time.Clock()
+        # Crie um novo canvas do Tkinter para exibir o gráfico atualizado
+        canvas = FigureCanvasTkAgg(fig, master=window)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
 
-view_world = pygame.Surface((width/2 - 20, height - 20))
-view_world.fill('grey50')
-view_cam = pygame.Surface((width/2 - 20, height - 20))
-view_cam.fill('gray50')
+        lbl_value_X.set(f'{cam[0,-1]: .1f}')
+        lbl_value_Y.set(f'{cam[1,-1]: .1f}')
+        lbl_value_Z.set(f'{cam[2,-1]: .1f}')
 
-test_font = pygame.font.Font(None, 30)
-text_surface = test_font.render("Camera positiion", False, 'Green')
-x_cam_surface = test_font.render("X: ", False, 'Green')
-y_cam_surface = test_font.render("Y: ", False, 'Green')
-z_cam_surface = test_font.render("Z: ", False, 'Green')
+    except:
+        print("Error")
 
-font = pygame.font.Font(None, 25)
-text_warning = font.render("You are changing the", False, 'Black')
+def rotate_grafico(angle_x, angle_y, angle_z):
+    global cam, M_cam0
+    if not(camera):
+        cam = x_rotation(angle_x) @ cam
+        M_cam0 = x_rotation(angle_x) @ M_cam0
+        cam = x_rotation(angle_y) @ cam
+        M_cam0 = x_rotation(angle_y) @ M_cam0
+        cam = x_rotation(angle_z) @ cam
+        M_cam0 = x_rotation(angle_z) @ M_cam0
+    else:
+        cam = x_rotation_cam_ref(angle_x, M_cam0) @ cam
+        M_cam0 = x_rotation_cam_ref(angle_x, M_cam0) @ M_cam0
+        cam = y_rotation_cam_ref(angle_y, M_cam0) @ cam
+        M_cam0 = y_rotation_cam_ref(angle_y, M_cam0) @ M_cam0
+        cam = z_rotation_cam_ref(angle_z, M_cam0) @ cam
+        M_cam0 = z_rotation_cam_ref(angle_z, M_cam0) @ M_cam0
+    exibir_grafico(0,0,0)
 
-class SwitchButton:
-    def __init__(self, x, y, width, height, on_color, off_color, textOFF='OFF', textON='ON', title='title'):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.rect2 = pygame.Rect(x+width, y, width, height)
-        self.on_color = on_color
-        self.off_color = off_color
-        self.is_on = False
+def moveX_forward():
+    exibir_grafico(step, 0, 0)
+def moveX_backward():
+    exibir_grafico(-step, 0, 0)
+def moveY_forward():
+    exibir_grafico(0, step, 0)
+def moveY_backward():
+    exibir_grafico(0, -step, 0)
+def moveZ_forward():
+    exibir_grafico(0, 0, step)
+def moveZ_backward():
+    exibir_grafico(0, 0, -step)
 
-        self.font = pygame.font.Font(None, 20)
-        self.fontT = pygame.font.Font(None, 25)
-        self.text_surface = self.fontT.render(title, False, (20, 20, 20))
-        self.buttonSurfaceOFF = pygame.Surface((width, height))
-        self.buttonSurfOFF = self.font.render(textOFF, True, (20, 20, 20))
-        self.text_rectOFF = self.buttonSurfOFF.get_rect(center=self.rect.center)
-        #--
-        self.buttonSurfaceON = pygame.Surface((width, height))
-        self.buttonSurfON = self.font.render(textON, True, (20, 20, 20))
-        self.text_rectON = self.buttonSurfON.get_rect(center=self.rect.center)
+def rotX_forward():
+    rotate_grafico(angle, 0, 0)
+def rotX_backward():
+    rotate_grafico(-angle, 0, 0)
+def rotY_forward():
+    rotate_grafico(0, angle, 0)
+def rotY_backward():
+    rotate_grafico(0, -angle, 0)
+def rotZ_forward():
+    rotate_grafico(0, 0, angle)
+def rotZ_backward():
+    rotate_grafico(0, 0, -angle)
 
-    def draw(self, surface):
-        color_1 = self.on_color if self.is_on else self.off_color
-        color_2 = self.off_color if self.is_on else self.on_color
-        pygame.draw.rect(surface, color_1, self.rect,
-                         border_top_left_radius=10, border_bottom_left_radius=10)
-        pygame.draw.rect(surface, color_2, self.rect2,
-                         border_top_right_radius=10,border_bottom_right_radius=10)
-        surface.blit(self.text_surface, (self.rect.x, self.rect.y - self.rect.height // 2.5))
-        surface.blit(self.buttonSurfOFF, (self.rect.x + self.rect.width // 2 - self.buttonSurfOFF.get_width() // 2,
-                                       self.rect.y + self.rect.height // 2 - self.buttonSurfOFF.get_height() // 2))
-        surface.blit(self.buttonSurfON, (self.rect2.x + self.rect2.width // 2 - self.buttonSurfON.get_width() // 2,
-                                          self.rect2.y + self.rect2.height // 2 - self.buttonSurfON.get_height() // 2))
+def camera_reference():
+    global camera
+    if not(camera):
+        camera = not(camera)
+        btn_cam_ref.configure(bg="#b9b9b9")
+        btn_world_ref.configure(bg=initial_bg)
+    else:
+        camera = not (camera)
+        btn_cam_ref.configure(bg=initial_bg)
+        btn_world_ref.configure(bg="#b9b9b9")
 
-    def update(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos) or self.rect2.collidepoint(event.pos):
-                self.is_on = not self.is_on
+def change_values():
+    global step, f, sx, sy, MP, angle
+    try:
+        step = float(step_input.get())
+        angle = float(angle_input.get())
+        f = float(f_input.get())
+        sx = float(sx_input.get())
+        sy = float(sy_input.get())
+        exibir_grafico(0, 0, 0)
+    except:
+        print("Empty values")
 
-ON = (50, 50, 50)
-OFF = (190, 190, 190)
-print(view_cam.get_width())
-referential_switch = SwitchButton(width - 230, 50, 100, 50, ON, OFF,
-                                  textOFF="Camera", textON="World", title='Choose the Referential')
-rot_tra_switch = SwitchButton(width//2 + 30, 50, 100, 50, ON, OFF,
-                              textOFF="Rotation", textON="Translate", title="Choose Action")
+def reset_cam_position():
+    global cam, M_cam0
+    cam, M_cam0 = init_cam()
+    exibir_grafico(0,0,0)
+def reset_values():
+    global f, angle, step, sx, sy
+    f = 50
+    f_input.delete(0, tk.END)
+    f_input.insert(0, f'{f}')
+    angle = 15
+    angle_input.delete(0, tk.END)
+    angle_input.insert(0, f'{angle}')
+    step = 5
+    step_input.delete(0, tk.END)
+    step_input.insert(0, f'{step}')
+    sx = None
+    sx_input.delete(0, tk.END)
+    sx_input.insert(0, f'{35}')
+    sy = None
+    sy_input.delete(0, tk.END)
+    sy_input.insert(0, f'{30}')
 
+window = tk.Tk()
+
+# Crie a figura inicial do matplotlib
+# Crie a figura do matplotlib
 cam, M_cam0 = init_cam()
-f=50
-sx=None
-sy=None
-angle, step=15, 1
+f = 50
+angle = 15
+step = 5
+sx = None
+sy = None
 obj = init_obj()
-
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
+fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
+ax = world_view_frontend(fig, cam=cam, obj=obj)
+ax2 = camera_view_frontend(fig, proj)
+initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
+camera = False
 
-# Criar a View do Mundo
-fig_world = plt.figure(figsize=(6, 5))
-ax_world = world_view_frontend(fig_world, cam=cam, obj=obj)
-# Criar View da Camera
-fig_cam = plt.figure(figsize=(6, 5))
-ax_cam = camera_view_frontend(fig_cam, proj)
+# Crie um canvas do Tkinter para exibir o gráfico inicial
+canvas = FigureCanvasTkAgg(fig, master=window)
+canvas.draw()
+canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
 
+window.rowconfigure(0, minsize=50, weight=1)
+window.columnconfigure([0, 1, 2], minsize=50, weight=1)
+
+button_frame = tk.Frame(window)
+button_frame.grid(row=0, column=0, padx=0, pady=2)
+## --- Valores da Camera
+lbl_value = tk.Label(master=button_frame, text="Camera Values")
+lbl_value.grid(row=0, column=1, padx=2, pady=2)
+lbl_value = tk.Label(master=button_frame, text="Angle ")
+lbl_value.grid(row=1, column=0, padx=2, pady=2)
+angle_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{angle}'))
+angle_input.grid(row=1, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame, text="Step ")
+lbl_value.grid(row=2, column=0, padx=2, pady=2)
+step_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{step}'))
+step_input.grid(row=2, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame, text="")
+lbl_value.grid(row=3, column=0, padx=2, pady=2)
+lbl_value = tk.Label(master=button_frame, text="f ")
+lbl_value.grid(row=4, column=0, padx=2, pady=2)
+f_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{f}'))
+f_input.grid(row=4, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame, text="sx ")
+lbl_value.grid(row=5, column=0, padx=2, pady=2)
+sx_input = tk.Entry(button_frame, textvariable=tk.StringVar(value='35'))
+sx_input.grid(row=5, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame, text="sy ")
+lbl_value.grid(row=6, column=0, padx=2, pady=2)
+sy_input = tk.Entry(button_frame, textvariable=tk.StringVar(value='30'))
+sy_input.grid(row=6, column=1, pady=2)
 #
-cam_info_surface = pygame.Surface((text_surface.get_width(), 120))
-cam_info_surface.fill(color='gray50')
-cam_info_surface.blit(text_surface, (0,0))
-cam_info_surface.blit(x_cam_surface, (0,30))
-cam_info_surface.blit(y_cam_surface, (0,60))
-cam_info_surface.blit(z_cam_surface, (0,90))
+bt_change = tk.Button(master=button_frame, text="Change", command=change_values, width=10)
+bt_change.grid(row=7, column=1, pady=2)
+window.update()
 
-text_warning_surface = pygame.Surface((text_warning.get_width(),text_warning.get_height()*2+20))
-text_warning_surface.fill(color='white')
-text_warning_surface.blit(text_warning, (0, 0))
+button_frame1 = tk.Frame(window)
+button_frame1.place(x=button_frame.winfo_x() + button_frame.winfo_width(),
+                    y=0)
+## --- Resetar parametros da camera
+btn_resset_cam = tk.Button(master=button_frame1, text="Reset Cam Parameters", command=reset_values, width=int(window.winfo_width()*0.013), height=int(window.winfo_y()*0.025))
+btn_resset_cam.grid(row=0, column=0, pady=3)
+btn_resset_cam_pos = tk.Button(master=button_frame1, text="Reset Cam Position", command=reset_cam_position, width=int(window.winfo_width()*0.013), height=int(window.winfo_y()*0.025))
+btn_resset_cam_pos.grid(row=1, column=0, pady=3)
+print(window.winfo_width(), window.winfo_height())
 
-# Converte o gráfico em uma superfície do Pygame
-canvas = FigureCanvasAgg(fig_world)
-w, h = canvas.get_width_height()
-X, Y, Z = True, False, False
-Rc, Rc_neg, Rw, Rw_neg = np.eye(4), np.eye(4), np.eye(4), np.eye(4)
-dx, dy, dz = step, 0, 0
+button_frame = tk.Frame(window)
+button_frame.grid(row=0, column=1, padx=0, pady=2)
+## --- Definir a referencia
+lbl_value = tk.Label(master=button_frame, text="Reference")
+lbl_value.grid(row=0, column=7, padx=2)
+btn_cam_ref = tk.Button(master=button_frame, text="Camera", command=camera_reference, width=10)
+btn_cam_ref.grid(row=1, column=6, pady=2)
+lbl_value = tk.Label(master=button_frame, text="")
+lbl_value.grid(row=1, column=7)
+btn_world_ref = tk.Button(master=button_frame, text="World", command=camera_reference, width=10, bg="#b9b9b9")
+btn_world_ref.grid(row=1, column=8, pady=2)
 
-while True:
-    screen.fill((20,20,20))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_x:
-                X, Y, Z = True, False, False
-                dx, dy, dz = step, 0, 0
-                Rw, Rc = x_rotation(angle), x_rotation_cam_ref(angle, M_cam0)
-                Rw_neg, Rc_neg = x_rotation(-angle), x_rotation_cam_ref(-angle, M_cam0)
-            elif event.key == pygame.K_y:
-                X, Y, Z = False, True, False
-                dx, dy, dz = 0, step, 0
-                Rw, Rc = y_rotation(angle), y_rotation_cam_ref(angle, M_cam0)
-                Rw_neg, Rc_neg = y_rotation(-angle), y_rotation_cam_ref(-angle, M_cam0)
-            elif event.key == pygame.K_z:
-                X, Y, Z = False, False, True
-                dx, dy, dz = 0, 0, step
-                Rw, Rc = z_rotation(angle), z_rotation_cam_ref(angle, M_cam0)
-                Rw_neg, Rc_neg = z_rotation(-angle), z_rotation_cam_ref(-angle, M_cam0)
-            if not(rot_tra_switch.is_on): ## --- Tranlacao
-                cam, M_cam0, ax_cam, ax_world = update_cam_translation(cam, M_cam0, ax_cam, ax_world)
-            if rot_tra_switch.is_on: # ---- Rotacao
-                cam, M_cam0, ax_cam, ax_world = update_cam_rotation(cam, M_cam0, ax_cam, ax_world)
-        referential_switch.update(event)
-        rot_tra_switch.update(event)
+## --- Translation
+lbl_value = tk.Label(master=button_frame, text="Translation")
+lbl_value.grid(row=0, column=1)
+lbl_value_X = tk.StringVar()
+lbl_value_X.set(f'{cam[0,-1]: .1f}')
+lbl_value = tk.Label(master=button_frame, text="X orientation")
+lbl_value.grid(row=1, column=1)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveX_backward, width=5)
+btn_decreaseX.grid(row=2, column=0, padx=2)
+lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_X)
+lbl_value.grid(row=2, column=1, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=moveX_forward, width=5)
+btn_increaseX.grid(row=2, column=2, padx=2)
 
-    screen.blit(view_world, (10, 10))
-    screen.blit(view_cam, (width / 2 + 10, 10))
-    display_cam_info(cam)
+lbl_value_Y = tk.StringVar()
+lbl_value_Y.set(f'{cam[1,-1]: .1f}')
+lbl_value = tk.Label(master=button_frame, text="Y orientation")
+lbl_value.grid(row=3, column=1)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveY_backward, width=5)
+btn_decreaseX.grid(row=4, column=0, padx=2)
+lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_Y)
+lbl_value.grid(row=4, column=1, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=moveY_forward, width=5)
+btn_increaseX.grid(row=4, column=2, padx=2)
 
-    referential_switch.draw(screen)
-    rot_tra_switch.draw(screen)
+lbl_value_Z = tk.StringVar()
+lbl_value_Z.set(f'{cam[2,-1]: .1f}')
+lbl_value = tk.Label(master=button_frame, text="Z orientation")
+lbl_value.grid(row=5, column=1)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=moveZ_backward, width=5)
+btn_decreaseX.grid(row=6, column=0, padx=2)
+lbl_value = tk.Label(master=button_frame, textvariable=lbl_value_Z)
+lbl_value.grid(row=6, column=1, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=moveZ_forward, width=5)
+btn_increaseX.grid(row=6, column=2, padx=2)
 
-    # --- World
-    #draw_graphics(fig_world, h=height-h-20, w=20, mundo=True)
-    #draw_graphics(fig_world, h=int(height-h*0.14), mundo=True) #height-70
-    display_warning()
-    # --- Camera
-    draw_graphics(fig_cam, h=height-h-20, w=width-w-20, mundo=False)
-    #draw_graphics(fig_cam, h=int(height-h*0.14), mundo=False)
+## --- Rotation
+lbl_value = tk.Label(master=button_frame, text="Rotation")
+lbl_value.grid(row=0, column=12)
 
-    print("-----------")
-    print("-----------")
-    print(cam)
+lbl_value = tk.Label(master=button_frame, text="X orientation")
+lbl_value.grid(row=1, column=12)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotX_backward, width=5)
+btn_decreaseX.grid(row=2, column=11, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=rotX_forward, width=5)
+btn_increaseX.grid(row=2, column=13, padx=2)
 
+lbl_value = tk.Label(master=button_frame, text="Y orientation")
+lbl_value.grid(row=3, column=12)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotY_backward, width=5)
+btn_decreaseX.grid(row=4, column=11, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=rotY_forward, width=5)
+btn_increaseX.grid(row=4, column=13, padx=2)
 
+lbl_value = tk.Label(master=button_frame, text="Z orientation")
+lbl_value.grid(row=5, column=12)
+btn_decreaseX = tk.Button(master=button_frame, text="-", command=rotZ_backward, width=5)
+btn_decreaseX.grid(row=6, column=11, padx=2)
+btn_increaseX = tk.Button(master=button_frame, text="+", command=rotZ_forward, width=5)
+btn_increaseX.grid(row=6, column=13, padx=2)
 
-    pygame.display.update()
-    clock.tick(10)
-
-# Limpa o arquivo temporário
-import os
-os.remove(temp_file)
-
+# Inicie o loop principal do Tkinter
+window.mainloop()
