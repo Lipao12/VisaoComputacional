@@ -48,7 +48,6 @@ def translate(dx, dy, dz):
 
 def z_rotation(angle):
     angle = d2rad(angle)
-    print(angle)
     rotation_matrix = np.array(
         [[cos(angle), -sin(angle), 0, 0], [sin(angle), cos(angle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     return rotation_matrix
@@ -113,21 +112,23 @@ def world_view(obj, cam):
 
     plt.show()
 
-def world_view_frontend(fig=None, cam=None, obj=None):
-    ax = fig.add_subplot(121, projection='3d')
+def world_view_frontend(fig, cam, obj,ax=None):
+    if ax==None:
+        ax = fig.add_subplot(1,2,1, projection='3d')
+    else:
+        ax=ax
     ax.set_xlim([0, 50])
     ax.set_ylim([-20, 20])
     ax.set_zlim([-20, 20])
 
     draw_arrows(cam[:, -1], cam[:, 0:-1], ax)
-    ax.plot3D(obj[0, :], obj[1, :], obj[2, :], 'red')
+    ax.plot3D(obj[0, :], obj[1, :], obj[2, :], 'm')
     # Plotando a quina da casa que está em (0,0,0) para servir de referência
     ax.scatter(obj[0, 0], obj[1, 0], obj[2, 0], 'b')
     # Plote a câmera também - adicione o código abaixo
     draw_arrows(cam[:, -1], cam[:, 0:3], ax)
 
     return ax
-
 
 ###################################################################
 ############################  Camera  #############################
@@ -209,14 +210,16 @@ def cam_view(proj, width=1280, height=720):
     plt.show()
 
 
-def camera_view_frontend(fig, proj, width=1280, height=720):
-    ax = fig.add_subplot(122)
-    #ax = plt.axes()
-    ax.set_title("Imagem")
+def camera_view_frontend(fig, proj, ax=None, width=1280, height=720):
+    if ax is None:
+        ax = fig.add_subplot(1, 2, 2)
+    else:
+        ax = ax
+    ax.set_title("Image")
     ax.set_xlim([0, width])
     ax.set_ylim([height, 0])
 
-    plt.plot(proj[0, :], proj[1, :])
+    ax.plot(proj[0, :], proj[1, :], 'm')
 
     ax.grid('True')
     ax.set_aspect('equal')

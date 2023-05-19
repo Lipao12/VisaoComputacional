@@ -4,44 +4,34 @@ import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# Variável global para o canvas
 canvas = None
 
-# Função para exibir o gráfico ao clicar no botão
 def exibir_grafico(dx, dy, dz):
-    global canvas, cam, M_cam0, lbl_value_Y, lbl_value_Z, ax, ax2 # Utilize as variáveis globais para atualizar as coordenadas existentes
-
+    global canvas, cam, M_cam0, lbl_value_Y, lbl_value_Z, ax, ax2
     try:
         if not(camera):
-            cam = translate(dx, dy, dz) @ cam
-            M_cam0 = translate(dx, dy, dz) @ M_cam0
+            M = translate(dx, dy, dz)
         else:
-            cam = translate_cam_ref(dx, dy, dz, M_cam0) @ cam
-            M_cam0 = translate_cam_ref(dx, dy, dz, M_cam0) @ M_cam0
+            M = translate_cam_ref(dx, dy, dz, M_cam0)
+
+        cam = M @ cam
+        M_cam0 = M @ M_cam0
 
         MP = cam_projection(M_cam0, f=f, sx=sx, sy=sy)
         proj = image_2d(MP, obj)
 
-        # Crie a figura do matplotlib
-        #fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
-        ax = world_view_frontend(fig, cam=cam, obj=obj)
-        ax2 = camera_view_frontend(fig, proj)
+        ax.cla()
+        ax = world_view_frontend(fig, ax=ax, cam=cam, obj=obj)
+        ax2.cla()
+        ax2 = camera_view_frontend(fig, proj, ax=ax2)
 
-        # Limpe o canvas antes de desenhar o gráfico atualizado
-        if canvas:
-            canvas.get_tk_widget().pack_forget()
-
-        # Crie um novo canvas do Tkinter para exibir o gráfico atualizado
-        canvas = FigureCanvasTkAgg(fig, master=window)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
 
-        lbl_value_X.set(f'{cam[0,-1]: .1f}')
-        lbl_value_Y.set(f'{cam[1,-1]: .1f}')
-        lbl_value_Z.set(f'{cam[2,-1]: .1f}')
-
-    except:
-        print("Error")
+        lbl_value_X.set(f'{cam[0, -1]: .1f}')
+        lbl_value_Y.set(f'{cam[1, -1]: .1f}')
+        lbl_value_Z.set(f'{cam[2, -1]: .1f}')
+    except Exception as e:
+        print("Error:", e)
 
 def rotate_grafico(angle_x, angle_y, angle_z):
     global cam, M_cam0
@@ -83,8 +73,9 @@ def change_values():
         sx = float(sx_input.get())
         sy = float(sy_input.get())
         exibir_grafico(0, 0, 0)
-    except:
-        print("Empty values")
+
+    except Exception as e:
+        print("Error:", e)
 
 def reset_cam_position():
     global cam, M_cam0
@@ -107,27 +98,26 @@ def reset_values():
     sy = None
     sy_input.delete(0, tk.END)
     sy_input.insert(0, f'{30}')
+    change_values()
 
 window = tk.Tk()
 window.title("Projeto 1 - Visão Computacional")
 window.geometry("1500x709")
 
-# Crie a figura inicial do matplotlib
-# Crie a figura do matplotlib
 cam, M_cam0 = init_cam()
+obj = translate(0,0,-9)@z_rotation(90)@init_obj2()
 f = 50
 angle = 15
 step = 5
 sx = None
 sy = None
-obj = translate(0,0,-9)@z_rotation(90)@init_obj2()
+camera = False
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
 ax = world_view_frontend(fig, cam=cam, obj=obj)
 ax2 = camera_view_frontend(fig, proj)
 initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
-camera = False
 
 # Crie um canvas do Tkinter para exibir o gráfico inicial
 canvas = FigureCanvasTkAgg(fig, master=window)
@@ -177,7 +167,6 @@ btn_resset_cam = tk.Button(master=button_frame1, text="Reset Cam Parameters", co
 btn_resset_cam.grid(row=0, column=0, pady=3)
 btn_resset_cam_pos = tk.Button(master=button_frame1, text="Reset Cam Position", command=reset_cam_position, width=int(window.winfo_width()*0.013), height=int(window.winfo_y()*0.025))
 btn_resset_cam_pos.grid(row=1, column=0, pady=3)
-print(window.winfo_width(), window.winfo_height())
 
 button_frame = tk.Frame(window)
 button_frame.grid(row=0, column=1, padx=0, pady=2)
