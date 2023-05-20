@@ -21,9 +21,9 @@ def exibir_grafico(dx, dy, dz):
         proj = image_2d(MP, obj)
 
         ax.cla()
-        ax = world_view_frontend(fig, ax=ax, cam=cam, obj=obj)
+        ax = world_visualization(fig, ax=ax, cam=cam, obj=obj)
         ax2.cla()
-        ax2 = camera_view_frontend(fig, proj, ax=ax2)
+        ax2 = camera_visualization(fig, proj, ax=ax2)
 
         canvas.draw()
 
@@ -115,8 +115,8 @@ camera = False
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
-ax = world_view_frontend(fig, cam=cam, obj=obj)
-ax2 = camera_view_frontend(fig, proj)
+ax = world_visualization(fig, cam=cam, obj=obj)
+ax2 = camera_visualization(fig, proj)
 initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
 
 ##

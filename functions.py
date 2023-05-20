@@ -100,7 +100,7 @@ def draw_arrows(point, base, axis, length=1.5):
 
     return axis
 
-def world_view_frontend(fig, cam, obj,ax=None):
+def world_visualization(fig, cam, obj,ax=None):
     if ax==None:
         ax = fig.add_subplot(1,2,1, projection='3d')
     else:
@@ -178,7 +178,7 @@ def set_cam_position(dx, dy, dz, cam, M):
     M[:, -1] = dx, dy, dz, 1
     return cam, M
 
-def camera_view_frontend(fig, proj, ax=None, width=1280, height=720):
+def camera_visualization(fig, proj, ax=None, width=1280, height=720):
     if ax is None:
         ax = fig.add_subplot(1, 2, 2)
     else:
