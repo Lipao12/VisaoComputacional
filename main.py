@@ -1,7 +1,7 @@
 import tkinter as tk
 from functions import *
 import matplotlib.pyplot as plt
-
+import tkinter.font as tkFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 canvas = None
@@ -119,54 +119,42 @@ ax = world_view_frontend(fig, cam=cam, obj=obj)
 ax2 = camera_view_frontend(fig, proj)
 initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
 
-# Crie um canvas do Tkinter para exibir o gráfico inicial
 canvas = FigureCanvasTkAgg(fig, master=window)
 canvas.draw()
 canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
-import tkinter.font as tkFont
 title = tkFont.Font(size=11, weight="bold")
 
 window.rowconfigure(0, minsize=50, weight=1)
 window.columnconfigure([0, 1, 2], minsize=50, weight=1)
 
-button_frame = tk.Frame(window)
-button_frame.grid(row=0, column=0, padx=0, pady=2)
+button_frame1 = tk.Frame(window)
+button_frame1.grid(row=0, column=0, padx=0, pady=2)
 ## --- Valores da Camera
-lbl_value = tk.Label(master=button_frame, text="Angle ")
+lbl_value = tk.Label(master=button_frame1, text="Angle ")
 lbl_value.grid(row=0, column=0, padx=2, pady=2)
-angle_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{angle}'))
+angle_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value=f'{angle}'))
 angle_input.grid(row=0, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame, text="Step ")
+lbl_value = tk.Label(master=button_frame1, text="Step ")
 lbl_value.grid(row=1, column=0, padx=2, pady=2)
-step_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{step}'))
+step_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value=f'{step}'))
 step_input.grid(row=1, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame, text="Camera Intrinsic\n Values", font=title)
+lbl_value = tk.Label(master=button_frame1, text="Camera Intrinsic\n Values", font=title)
 lbl_value.grid(row=3, column=1, padx=2, pady=2)
-lbl_value = tk.Label(master=button_frame, text="f ")
+lbl_value = tk.Label(master=button_frame1, text="f ")
 lbl_value.grid(row=4, column=0, padx=2, pady=2)
-f_input = tk.Entry(button_frame, textvariable=tk.StringVar(value=f'{f}'))
+f_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value=f'{f}'))
 f_input.grid(row=4, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame, text="sx ")
+lbl_value = tk.Label(master=button_frame1, text="sx ")
 lbl_value.grid(row=5, column=0, padx=2, pady=2)
-sx_input = tk.Entry(button_frame, textvariable=tk.StringVar(value='35'))
+sx_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value='35'))
 sx_input.grid(row=5, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame, text="sy ")
+lbl_value = tk.Label(master=button_frame1, text="sy ")
 lbl_value.grid(row=6, column=0, padx=2, pady=2)
-sy_input = tk.Entry(button_frame, textvariable=tk.StringVar(value='30'))
+sy_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value='30'))
 sy_input.grid(row=6, column=1, pady=2)
 #
-bt_change = tk.Button(master=button_frame, text="Change", command=change_values, width=10)
+bt_change = tk.Button(master=button_frame1, text="Change", command=change_values, width=10)
 bt_change.grid(row=7, column=1, pady=2)
-window.update()
-
-button_frame1 = tk.Frame(window)
-button_frame1.place(x=button_frame.winfo_x() + button_frame.winfo_width(),
-                    y=0)
-## --- Resetar parametros da camera
-btn_resset_cam = tk.Button(master=button_frame1, text="Reset Cam Parameters", command=reset_values, width=int(window.winfo_width()*0.013), height=int(window.winfo_y()*0.025))
-btn_resset_cam.grid(row=0, column=0, pady=3)
-btn_resset_cam_pos = tk.Button(master=button_frame1, text="Reset Cam Position", command=reset_cam_position, width=int(window.winfo_width()*0.013), height=int(window.winfo_y()*0.025))
-btn_resset_cam_pos.grid(row=1, column=0, pady=3)
 
 button_frame = tk.Frame(window)
 button_frame.grid(row=0, column=1, padx=0, pady=2)
@@ -244,6 +232,17 @@ lbl_value = tk.Label(master=button_frame, text="")
 lbl_value.grid(row=1, column=12)
 btn_world_ref = tk.Button(master=button_frame, text="World", command=camera_reference, width=10, bg="#b9b9b9")
 btn_world_ref.grid(row=1, column=13, pady=2)
+
+window.update()
+
+button_frame2 = tk.Frame(window)
+button_frame2.place(x=(button_frame1.winfo_x()+button_frame.winfo_x())//2,
+                    y=0)
+## --- Resetar parametros da camera
+btn_resset_cam = tk.Button(master=button_frame2, text="Reset Camera\nParameters", command=reset_values, width=13)
+btn_resset_cam.grid(row=1, column=2, pady=3)
+btn_resset_cam_pos = tk.Button(master=button_frame2, text="Reset Camera\nPosition", command=reset_cam_position, width=13)
+btn_resset_cam_pos.grid(row=2, column=2, pady=3)
 
 # Inicie o loop principal do Tkinter
 window.mainloop()
