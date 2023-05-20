@@ -119,6 +119,12 @@ ax = world_view_frontend(fig, cam=cam, obj=obj)
 ax2 = camera_view_frontend(fig, proj)
 initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
 
+##
+##
+## Daqui para baixo é apenas criacao da interface
+##
+##
+
 canvas = FigureCanvasTkAgg(fig, master=window)
 canvas.draw()
 canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
