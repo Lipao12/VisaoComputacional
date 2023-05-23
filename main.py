@@ -17,13 +17,13 @@ def exibir_grafico(dx, dy, dz):
         cam = M @ cam
         M_cam0 = M @ M_cam0
 
-        MP = cam_projection(M_cam0, f=f, sx=sx, sy=sy)
+        MP = cam_projection(M_cam0, f=f, cdd_h=cdd_h, cdd_w=cdd_w, width=width,height=height)
         proj = image_2d(MP, obj)
 
         ax.cla()
         ax = world_visualization(fig, ax=ax, cam=cam, obj=obj)
         ax2.cla()
-        ax2 = camera_visualization(fig, proj, ax=ax2)
+        ax2 = camera_visualization(fig, proj, ax=ax2, width=width, height=height)
 
         canvas.draw()
 
@@ -67,11 +67,13 @@ def camera_reference():
     btn_world_ref.configure(bg=initial_bg if camera else "#b9b9b9")
 
 def change_values():
-    global  f, sx, sy, MP
+    global  f, cdd_w, cdd_h, MP, width, height
     try:
         f = float(f_input.get())
-        sx = float(sx_input.get())
-        sy = float(sy_input.get())
+        cdd_w = float(cdd_w_input.get())
+        cdd_h = float(cdd_h_input.get())
+        width = float(width_input.get())
+        height = float(height_input.get())
         exibir_grafico(0, 0, 0)
 
     except Exception as e:
@@ -82,7 +84,7 @@ def reset_cam_position():
     cam, M_cam0 = init_cam()
     exibir_grafico(0,0,0)
 def reset_values():
-    global f, angle, step, sx, sy
+    global f, angle, step, cdd_w, cdd_h, height, width
     f = 50
     f_input.delete(0, tk.END)
     f_input.insert(0, f'{f}')
@@ -92,31 +94,42 @@ def reset_values():
     step = 5
     step_input.delete(0, tk.END)
     step_input.insert(0, f'{step}')
-    sx = None
-    sx_input.delete(0, tk.END)
-    sx_input.insert(0, f'{35}')
-    sy = None
-    sy_input.delete(0, tk.END)
-    sy_input.insert(0, f'{30}')
+    cdd_w = 36
+    cdd_w_input.delete(0, tk.END)
+    cdd_w_input.insert(0, f'{cdd_w}')
+    cdd_h = 24
+    cdd_h_input.delete(0, tk.END)
+    cdd_h_input.insert(0, f'{cdd_h}')
+    width = 1280
+    width_input.delete(0, tk.END)
+    width_input.insert(0, f'{width}')
+    height = 720
+    height_input.delete(0, tk.END)
+    height_input.insert(0, f'{height}')
     change_values()
 
-window = tk.Tk()
-window.title("Projeto 1 - Visão Computacional")
-window.geometry("1500x709")
+
 
 cam, M_cam0 = init_cam()
-obj = translate(0,0,-9)@z_rotation(90)@init_obj2()
-f = 50
+obj = translate(0,0,-9)@z_rotation(90)@init_obj()
 angle = 15
 step = 5
-sx = None
-sy = None
+f = 50
+width=1280
+height=720
+cdd_w = 36
+cdd_h = 24
 camera = False
 MP = cam_projection(M_cam0, f)
 proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
 ax = world_visualization(fig, cam=cam, obj=obj)
 ax2 = camera_visualization(fig, proj)
+
+
+window = tk.Tk()
+window.title("Projeto 1 - Visão Computacional")
+window.geometry("1500x709")
 initial_bg = window.cget("bg")  # Cor de fundo padrão da janela
 
 ##
@@ -144,26 +157,37 @@ lbl_value = tk.Label(master=button_frame1, text="Step ")
 lbl_value.grid(row=1, column=0, padx=2, pady=2)
 step_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value=f'{step}'))
 step_input.grid(row=1, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame1, text="Camera Intrinsic\n Values", font=title)
+lbl_value = tk.Label(master=button_frame1, text="Camera Intrinsic\n Parameters", font=title)
 lbl_value.grid(row=3, column=1, padx=2, pady=2)
-lbl_value = tk.Label(master=button_frame1, text="f ")
-lbl_value.grid(row=4, column=0, padx=2, pady=2)
-f_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value=f'{f}'))
-f_input.grid(row=4, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame1, text="sx ")
-lbl_value.grid(row=5, column=0, padx=2, pady=2)
-sx_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value='35'))
-sx_input.grid(row=5, column=1, pady=2)
-lbl_value = tk.Label(master=button_frame1, text="sy ")
-lbl_value.grid(row=6, column=0, padx=2, pady=2)
-sy_input = tk.Entry(button_frame1, textvariable=tk.StringVar(value='30'))
-sy_input.grid(row=6, column=1, pady=2)
+
+button_frame2 = tk.Frame(button_frame1)
+button_frame2.grid(row=4, column=1, padx=0, pady=2)
+lbl_value = tk.Label(master=button_frame2, text="f ")
+lbl_value.grid(row=0, column=0, padx=2, pady=2)
+f_input = tk.Entry(button_frame2, width=7, textvariable=tk.StringVar(value=f'{f}'))
+f_input.grid(row=0, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame2, text="cdd_w ")
+lbl_value.grid(row=1, column=0, padx=2, pady=2)
+cdd_w_input = tk.Entry(button_frame2, width=7,textvariable=tk.StringVar(value=f'{cdd_w}'))
+cdd_w_input.grid(row=1, column=1, pady=2)
+lbl_value = tk.Label(master=button_frame2, text="cdd_h ")
+lbl_value.grid(row=2, column=0, padx=2, pady=2)
+cdd_h_input = tk.Entry(button_frame2,width=7,textvariable=tk.StringVar(value=f'{cdd_h}'))
+cdd_h_input.grid(row=2, column=1, pady=2, sticky="w")
+lbl_value = tk.Label(master=button_frame2, text="width")
+lbl_value.grid(row=0, column=3, padx=2, pady=2,sticky="w")
+width_input = tk.Entry(button_frame2,width=7,textvariable=tk.StringVar(value=f'{width}'))
+width_input.grid(row=0, column=4, pady=2)
+lbl_value = tk.Label(master=button_frame2, text="heigth")
+lbl_value.grid(row=1, column=3, padx=2, pady=2,sticky="w")
+height_input = tk.Entry(button_frame2,width=7,textvariable=tk.StringVar(value=f'{height}'))
+height_input.grid(row=1, column=4, pady=2)
 #
 bt_change = tk.Button(master=button_frame1, text="Change", command=change_values, width=10)
 bt_change.grid(row=7, column=1, pady=2)
 
 button_frame = tk.Frame(window)
-button_frame.grid(row=0, column=1, padx=0, pady=2)
+button_frame.grid(row=0, column=1, padx=0, pady=2, sticky='w')
 
 ## --- Translation
 lbl_value = tk.Label(master=button_frame, text="Translation", font=title)
@@ -242,8 +266,9 @@ btn_world_ref.grid(row=1, column=13, pady=2)
 window.update()
 
 button_frame2 = tk.Frame(window)
-button_frame2.place(x=(button_frame1.winfo_x()+button_frame.winfo_x())//2,
-                    y=0)
+#button_frame2.place(x=(button_frame1.winfo_x()+button_frame.winfo_x())//2,
+#                    y=0)
+button_frame2.grid(row=0, column=0, pady=2, padx=30, sticky="e")
 ## --- Resetar parametros da camera
 btn_resset_cam = tk.Button(master=button_frame2, text="Reset Camera\nParameters", command=reset_values, width=13)
 btn_resset_cam.grid(row=1, column=2, pady=3)

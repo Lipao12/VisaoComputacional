@@ -18,7 +18,7 @@ def init_cam(initial_point=[40,0,0]):
     M = translate(initial_point[0], initial_point[1], initial_point[2]) @ z_rotation(90) @ x_rotation(-90)
     return M@cam, M
 
-def init_obj2():
+def init_obj():
     your_mesh = mesh.Mesh.from_file('donkey_kong.STL')
     x = your_mesh.x.flatten()
     y = your_mesh.y.flatten()
