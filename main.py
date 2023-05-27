@@ -6,17 +6,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 canvas = None
 
-def exibir_grafico(dx, dy, dz):
-    global canvas, cam, M_cam0, lbl_value_Y, lbl_value_Z, ax, ax2
+def exibir_grafico():
+    global canvas, cam, M_cam0, lbl_value_X, lbl_value_Y, lbl_value_Z, ax, ax2
     try:
-        if not(camera):
-            M = translate(dx, dy, dz)
-        else:
-            M = translate_cam_ref(dx, dy, dz, M_cam0)
-
-        cam = M @ cam
-        M_cam0 = M @ M_cam0
-
         MP = cam_projection(M_cam0, f=f, cdd_h=cdd_h, cdd_w=cdd_w, width=width,height=height)
         proj = image_2d(MP, obj)
 
@@ -33,7 +25,7 @@ def exibir_grafico(dx, dy, dz):
     except Exception as e:
         print("Error:", e)
 
-def rotate_grafico(angle_x, angle_y, angle_z):
+def rotate_grafic(angle_x, angle_y, angle_z):
     global cam, M_cam0
     if not(camera):
         M = x_rotation(angle_x)@y_rotation(angle_y)@z_rotation(angle_z)
@@ -42,23 +34,34 @@ def rotate_grafico(angle_x, angle_y, angle_z):
 
     cam = M@cam
     M_cam0 = M@M_cam0
-    exibir_grafico(0,0,0)
+    exibir_grafico()
+
+def move_grafic(step_x, step_y, step_z):
+    global cam, M_cam0
+    if not(camera):
+        M = translate(step_x, step_y, step_z)
+    else:
+        M = translate_cam_ref(step_x, step_y, step_z, M_cam0)
+
+    cam = M@cam
+    M_cam0 = M@M_cam0
+    exibir_grafico()
 
 def move(step, axis):
     if axis == "X":
-        exibir_grafico(step, 0, 0)
+        move_grafic(step, 0, 0)
     elif axis == "Y":
-        exibir_grafico(0, step, 0)
+        move_grafic(0, step, 0)
     elif axis == "Z":
-        exibir_grafico(0, 0, step)
+        move_grafic(0, 0, step)
 
 def rotate(angle, axis):
     if axis == "X":
-        rotate_grafico(angle, 0, 0)
+        rotate_grafic(angle, 0, 0)
     elif axis == "Y":
-        rotate_grafico(0, angle, 0)
+        rotate_grafic(0, angle, 0)
     elif axis == "Z":
-        rotate_grafico(0, 0, angle)
+        rotate_grafic(0, 0, angle)
 
 def camera_reference():
     global camera
@@ -74,7 +77,7 @@ def change_values():
         cdd_h = float(cdd_h_input.get())
         width = float(width_input.get())
         height = float(height_input.get())
-        exibir_grafico(0, 0, 0)
+        exibir_grafico()
 
     except Exception as e:
         print("Error:", e)
@@ -82,7 +85,7 @@ def change_values():
 def reset_cam_position():
     global cam, M_cam0
     cam, M_cam0 = init_cam()
-    exibir_grafico(0,0,0)
+    exibir_grafico()
 def reset_values():
     global f, angle, step, cdd_w, cdd_h, height, width
     f = 50
@@ -108,7 +111,13 @@ def reset_values():
     height_input.insert(0, f'{height}')
     change_values()
 
-
+def set_position():
+    global cam, M_cam0
+    x = float(set_x_input.get())
+    y = float(set_y_input.get())
+    z = float(set_z_input.get())
+    cam, M_cam0 = set_cam_position(x, y, z, cam, M_cam0)
+    exibir_grafico()
 
 cam, M_cam0 = init_cam()
 obj = translate(0,0,-9)@z_rotation(90)@init_obj()
@@ -125,7 +134,6 @@ proj = image_2d(MP, obj)
 fig = plt.figure(figsize=(15, 5), dpi=100)#figsize=(6, 5))
 ax = world_visualization(fig, cam=cam, obj=obj)
 ax2 = camera_visualization(fig, proj)
-
 
 window = tk.Tk()
 window.title("Projeto 1 - Visão Computacional")
@@ -262,6 +270,28 @@ lbl_value = tk.Label(master=button_frame, text="")
 lbl_value.grid(row=1, column=12)
 btn_world_ref = tk.Button(master=button_frame, text="World", command=camera_reference, width=10, bg="#b9b9b9")
 btn_world_ref.grid(row=1, column=13, pady=2)
+
+set_pos_frame = tk.Frame(button_frame)
+set_pos_frame.grid(row=3, column=11, pady=2)
+lbl_value = tk.Label(master=set_pos_frame, text="x_pos")
+lbl_value.grid(row=0, column=0, padx=2, pady=2,)
+set_x_input = tk.Entry(set_pos_frame,width=7,textvariable=tk.StringVar(value=f'{cam[0,-1]}'))
+set_x_input.grid(row=0, column=1, pady=2)
+set_pos_frame = tk.Frame(button_frame)
+set_pos_frame.grid(row=4, column=11, pady=2)
+lbl_value = tk.Label(master=set_pos_frame, text="y_pos")
+lbl_value.grid(row=0, column=0, padx=2, pady=2,)
+set_y_input = tk.Entry(set_pos_frame,width=7,textvariable=tk.StringVar(value=f'{cam[1,-1]}'))
+set_y_input.grid(row=0, column=1, pady=2)
+set_pos_frame = tk.Frame(button_frame)
+set_pos_frame.grid(row=5, column=11, pady=2)
+lbl_value = tk.Label(master=set_pos_frame, text="z_pos")
+lbl_value.grid(row=0, column=0, padx=2, pady=2,)
+set_z_input = tk.Entry(set_pos_frame,width=7,textvariable=tk.StringVar(value=f'{cam[2,-1]}'))
+set_z_input.grid(row=0, column=1, pady=2)
+#
+bt_change = tk.Button(master=button_frame, text="Set Position", command=set_position, width=10)
+bt_change.grid(row=6, column=11, pady=2)
 
 window.update()
 
